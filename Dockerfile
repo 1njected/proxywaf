@@ -1,7 +1,5 @@
 FROM alpine:3.8
 
-LABEL maintainer="Elisiano Petrini <elisiano@gmail.com>"
-
 ENV NGINX_VERSION 1.15.3
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
@@ -186,8 +184,14 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
+# csr
+RUN mkdir /etc/nginx/modsecurity-data && chown nginx: /etc/nginx/modsecurity-data
+COPY modsec.conf /etc/nginx/modsecurity-data/modsec.conf 
+COPY owasp-modsecurity-crs/rules/*.data /etc/nginx/modsecurity-data/
+
+COPY 403.html /tmp/403.html
+	
 EXPOSE 80
 
 STOPSIGNAL SIGTERM

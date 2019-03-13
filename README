@@ -1,0 +1,4 @@
+docker build -t proxywaf .
+
+docker run -d -p 80:80 --log-driver syslog --log-opt syslog-address=tcp://127.0.0.1:514 -it proxywaf
+
