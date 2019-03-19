@@ -191,9 +191,34 @@ COPY modsec.conf /etc/nginx/modsecurity-data/modsec.conf
 COPY owasp-modsecurity-crs/rules/*.data /etc/nginx/modsecurity-data/
 
 COPY 403.html /tmp/403.html
-	
+
+# sslsplit
+ENV SSLSPLIT_VERSION 0.5.0
+RUN set -xe \
+    && apk add --no-cache --virtual .sslsplit-deps build-base \
+                          fts-dev \
+                          libevent-dev \
+                          linux-headers \
+                          openssl-dev \
+			  tar \
+    && apk add --no-cache curl fts libevent openssl libpcap \
+    && mkdir sslsplit \
+    && cd sslsplit \
+    && curl -sSL https://github.com/droe/sslsplit/archive/${SSLSPLIT_VERSION}.tar.gz | tar xz --strip 1 \
+    && sed -i '/^LIBS/s/$/ -lfts/' GNUmakefile \
+    && make install \
+    && cd .. \
+    && rm -rf sslsplit \
+    && apk del .sslsplit-deps
+
+COPY ca.pem /srv/ca.pem
+COPY rootCA.pem /srv/
+COPY rootCA.key /srv/
+COPY start.sh /srv/start.sh
+
 EXPOSE 80
+EXPOSE 443
 
 STOPSIGNAL SIGTERM
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "/srv/start.sh"]
